@@ -1,0 +1,144 @@
+#!/bin/bash
+
+# Hook script to enforce branch naming policy.
+#
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+#
+# Author : Jacques Raphanel
+# Version: 1.0
+#
+
+# File containing the commit message
+BRANCHNAME=$(git rev-parse --abbrev-ref HEAD)
+# Predefined list of supported commit types 
+TYPELIST="chore|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
+# Project root directory
+ROOTDIR=$PWD
+
+COLOR_RESET='\033[0m'
+COLOR_ERROR='\033[31m'
+
+# Print an error message through stderr
+echo_err() {
+    printf "${COLOR_ERROR}%s${COLOR_RESET}\n" "$@" >&2
+}
+
+# Report invalid commit error
+report_invalid_branch_name() {
+    echo_err "Invalid branch name detected !"
+    echo_err ""
+    echo_err "Expected format: <type>/<subject>/<jira_ref>"
+    echo_err ""
+    echo_err "Examples:"
+    echo_err "build/refactor-build/no-ref"
+    echo_err "feature/messaging-repasse-ui/REF-374"
+    exit 1
+}
+
+# Report invalid commit type error
+report_invalid_type() {
+    echo_err "Invalid commit type detected from branch name !"
+    echo_err ""
+    echo_err "The list of supported commit types is:"
+    echo_err "  => $(echo $TYPELIST | sed -e 's:|: :g')"
+    exit 1
+}
+
+# Report invalid JIRA ref error
+report_invalid_jira_ref() {
+    echo_err "Invalid JIRA reference detected from branch name !"
+    echo_err ""
+    echo_err "Expected format: <type>/<subject>/<jira_ref>"
+    echo_err ""
+    echo_err "Examples:"
+    echo_err "no-ref"
+    echo_err "REW-374"
+    echo_err "DS-241"
+    exit 1
+}
+
+
+# Report invalid branch name format
+report_invalid_format() {
+	echo_err "Invalid branch name!"
+	echo_err "Please rename your branch and try to commit again."
+	echo_err ""
+	echo_err "Format:  <type>/<subject>/<jira_ref>"
+	echo_err ""
+	echo_err "where jira_ref can be no-ref if not associated to a jira ticket"
+    echo_err "or omitted in case of experimental branch type"
+	exit 1
+}
+
+# Check that the branch name is following company's conventions
+check_branch_name() {
+    # Build the regular expression to validate the branch name
+    local COMMITRE="^(${TYPELIST})"                      # Branch type
+    COMMITRE="${COMMITRE}/[a-z].*"                       # Description/Subject
+    COMMITRE="${COMMITRE}/(no-ref|[A-Z]{2,6}-[0-9]+)i\$" # JIRA reference
+
+    if echo $BRANCHNAME | grep -Eq "$COMMITRE" >& /dev/null; then
+        return
+    fi
+
+    if [ "$BRANCHNAME" = "main" ]; then
+        return
+    fi
+
+    if [ `echo $BRANCHNAME | grep -c '/'` -eq 0 ]; then
+        report_invalid_format
+    fi
+
+    # Decompose the branch name into simple fields
+    local BRANCHTYPE=$(echo $BRANCHNAME | cut -d/ -f1)
+    local SUBJECT=$(echo $BRANCHNAME | cut -d/ -f2)
+    local JIRAISSUE=$(echo $BRANCHNAME | cut -d/ -f3)
+
+    # check if it is related to an unsupported type
+    COMMITRE="^(${TYPELIST})(/.*)?$"
+    if ! echo $BRANCHTYPE | grep -Eq "$COMMITRE"; then
+        report_invalid_type
+    fi
+
+    # ensure that subject is defined
+    if [ -z "${SUBJECT// /}" ]; then
+        report_invalid_format
+    fi
+
+    # double-check JIRA issue definition
+    if [ -z "${JIRAISSUE// /}" ]; then
+        if [ "$BRANCHTYPE" = "experimental" ]; then
+            # JIRA issue not required in case of experimental branch
+            return
+        fi
+    else
+        if ! echo $JIRAISSUE | grep -Eq "^(no-ref|[A-Z]{2,6}-[0-9]+)$"; then
+            report_invalid_jira_ref
+        fi
+    fi
+}
+
+# Validate the branch name
+main() {
+    # Check if the branch message follow our conventions or not
+    check_branch_name
+}
+
+# Check if commit types are locally customized
+if [ -r "$ROOTDIR/.github/conventions/commit_types.conf" ]; then
+    TYPELIST=$(sed -z 's:\n:|:g' "$ROOTDIR/.github/conventions/commit_types.conf")
+    if [ -z "$TYPELIST" ]; then
+        echo_err "Invalid commit_types.conf file detected"
+        exit 1
+    fi
+fi
+
+# Perform all required checks
+main
+
+exit 0
+
+# vim:set tabstop=4 shiftwidth=4 expandtab autoindent:
+

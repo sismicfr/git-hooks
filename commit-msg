@@ -1,0 +1,170 @@
+#!/bin/bash
+#
+# Hook script to check the commit log message format.
+#
+# Called by "git commit" with one argument, the name of the file
+# that has the commit message.  The hook should exit with non-zero
+# status after issuing an appropriate message if it wants to stop the
+# commit.  The hook is allowed to edit the commit message file.
+#
+# Author : Jacques Raphanel
+# Version: 1.0
+#
+
+# File containing the commit message
+FILENAME=$1
+# Predefined list of supported commit types 
+TYPELIST="chore|fix|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
+# Predefined list of supported scopes
+SCOPELIST=""
+# Project root directory
+ROOTDIR=$PWD
+
+COLOR_RESET='\033[0m'
+COLOR_ERROR='\033[31m'
+
+# Print an error message through stderr
+echo_err() {
+    printf "${COLOR_ERROR}%s${COLOR_RESET}\n" "$@" >&2
+}
+
+
+# Report invalid commit error
+report_invalid_commit() {
+    echo_err "COMMIT failed !"
+    echo_err "Please enter commit message in the conventional format and try to commit again."
+    echo_err ""
+    echo_err "Examples:"
+    echo_err "bugfix: navbar not responsive on mobile"
+    echo_err "test: prepared test cases for user authentication"
+    echo_err "build: moved to semantic versioning"
+    echo_err "bugfix: button click even handler firing twice"
+    echo_err "hotfix: login page css"
+    echo_err "feat(auth): added social login using twitter"
+    echo_err "refactor!: back to version X.Y.Z for component ZZZ"
+    echo_err "feat!: we support space before : for French people :-)"
+    exit 1
+}
+
+# Report invalid commit type error
+report_invalid_type() {
+    echo_err "COMMIT failed !"
+    echo_err ""
+    echo_err "The list of supported commit types is:"
+    echo_err "  => $(echo $TYPELIST | sed -e 's:|: :g; s:?::g' )"
+    exit 1
+}
+
+# Report invalid commit scope error
+report_invalid_scope() {
+    echo_err "COMMIT failed !"
+    echo_err ""
+    echo_err "The list of supported commit scopes is:"
+    echo_err "  => $(echo $SCOPELIST | sed -e 's:|: :g; s:?::g')"
+    exit 1
+}
+
+# Report global invalid commit message format
+report_invalid_format() {
+    echo_err "COMMIT failed !"
+    echo_err "Please enter commit message in the conventional format and try to commit again."
+    echo_err ""
+    echo_err "Format:"
+    echo_err "<type>(<scope>): <subject>"
+    echo_err "<BLANK LINE>"
+    echo_err "<body>"
+    echo_err "<BLANK LINE>"
+    echo_err "<footer>"
+    echo_err ""
+    echo_err "where scope, body and footer are optional"
+    exit 1
+}
+
+# Analyze the first line to ensure that conventional commit is properly used
+check_first_line() {
+    # Build the regular expression to validate the commit message
+    local COMMITRE="^(${TYPELIST})"        # Commit type
+    if [ -z "$SCOPELIST" ]; then    # Commit scope
+        COMMITRE+='(\([\w\-\s]+\))?!?'    # No scope restriction
+    else
+        COMMITRE+="\(\s?(${SCOPELIST})\s?\)!?" # Predefined list of allowed scopes
+    fi
+    COMMITRE+='\s?:\s'    # Delimiter between type/scope and subject
+    COMMITRE+='.*$'        # Subject
+
+    if grep -Eo "$COMMITRE" $FILENAME >& /dev/null; then
+        return
+    fi
+
+    # check if it is related to an unsupported type
+    COMMITRE="^(${TYPELIST})"        # Commit type
+    COMMITRE+='(\([\w\-\s]+\))?!?'    # No scope restriction
+    COMMITRE+='\s?:\s'    # Delimiter between type/scope and subject
+    COMMITRE+='.*$'        # Subject
+    if ! grep -Eo "$COMMITRE" $FILENAME >& /dev/null; then
+        report_invalid_type
+    fi
+    
+    # check if it is related to an unsupported scope
+    if [ -n "$SCOPELIST" ]; then
+        COMMITRE="^(\w+)"        # Commit type
+        COMMITRE+='(\([\w\-\s]+\))?!?'    # No scope restriction        
+        COMMITRE+='\s?:\s'    # Delimiter between type/scope and subject
+        COMMITRE+='.*$'        # Subject
+        if ! grep -Eo "$COMMITRE" $FILENAME >& /dev/null; then
+            report_invalid_scope
+        fi
+    fi
+    report_invalid_commit
+}
+
+# Ensure that the second line is an empty line
+check_second_line() {
+    local SECONDLINE=$(cat $FILENAME | grep -Ev '^#' | head -n 2 | tail -n 1)
+    echo "SECONDLINE=$SECONDLINE"
+    cat $FILENAME
+    if [ -n "$SECONDLINE" ]; then
+        report_invalid_format
+    fi
+}
+
+# Validate the commit message
+main() {
+    # Check if the commit message follow our conventions or not
+    check_first_line
+
+    if [ $LINECOUNT -gt 1 ]; then
+        # Check that the second line is an empty line
+        check_second_line
+    fi
+}
+
+# Check if commit types are locally customized
+if [ -r "$ROOTDIR/.github/conventions/commit_types.conf" ]; then
+    TYPELIST=$(sed -z 's:\n:|:g' "$ROOTDIR/.github/conventions/commit_types.conf")
+    if [ -z "$TYPELIST" ]; then
+        echo_err "Invalid commit_types.conf file detected"
+        exit 1
+    fi
+fi
+
+# Check if commit scopes are locally restricted or not
+if [ -r "$ROOTDIR/.github/conventions/commit_scopes.conf" ]; then
+    SCOPELIST=$(sed -z 's:\n:|:g' "$ROOTDIR/.github/conventions/commit_scopes.conf")
+    if [ -z "$SCOPELIST" ]; then
+        echo_err "Invalid commit_scopes.conf file detected"
+        exit 1
+    fi
+fi
+
+# Count the total number of lines
+# grep -Ev '^#': skip all commented lines
+LINECOUNT=$(cat $FILENAME | grep -Ev '^#' | wc -l)
+
+# Perform all required checks
+main
+
+exit 0
+
+# vim:set tabstop=4 shiftwidth=4 expandtab autoindent:
+
