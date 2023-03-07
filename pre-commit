@@ -7,7 +7,7 @@
 # it wants to stop the commit.
 #
 # Author : Jacques Raphanel
-# Version: 1.0
+# Version: 1.1
 #
 
 # File containing the commit message
@@ -83,7 +83,7 @@ check_branch_name() {
         return
     fi
 
-    if [ "$BRANCHNAME" = "main" ]; then
+    if [ "$BRANCHNAME" = "main" -o "$BRANCHNAME" = "master" ]; then
         return
     fi
 
