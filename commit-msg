@@ -8,7 +8,7 @@
 # commit.  The hook is allowed to edit the commit message file.
 #
 # Author : Jacques Raphanel
-# Version: 1.0
+# Version: 1.1
 #
 
 # File containing the commit message
@@ -32,7 +32,7 @@ echo_err() {
 # Report invalid commit error
 report_invalid_commit() {
     echo_err "COMMIT failed !"
-    echo_err "Please enter commit message in the conventional format and try to commit again."
+    echo_err "Please enter commit message with conventional format and try to commit again."
     echo_err ""
     echo_err "Examples:"
     echo_err "bugfix: navbar not responsive on mobile"
@@ -83,34 +83,35 @@ report_invalid_format() {
 # Analyze the first line to ensure that conventional commit is properly used
 check_first_line() {
     # Build the regular expression to validate the commit message
-    local COMMITRE="^(${TYPELIST})"        # Commit type
-    if [ -z "$SCOPELIST" ]; then    # Commit scope
-        COMMITRE+='(\([\w\-\s]+\))?!?'    # No scope restriction
+    local COMMITRE="^(${TYPELIST})"   # Commit type
+    if [ -z "$SCOPELIST" ]; then      # Commit scope
+        COMMITRE+='(\([^)]+\))?!?'    # No scope restriction
     else
-        COMMITRE+="\(\s?(${SCOPELIST})\s?\)!?" # Predefined list of allowed scopes
+        COMMITRE+="\( ?(${SCOPELIST}) ?\)!?" # Predefined list of allowed scopes
     fi
-    COMMITRE+='\s?:\s'    # Delimiter between type/scope and subject
-    COMMITRE+='.*$'        # Subject
+    COMMITRE+=' ?: ?'    # Delimiter between type/scope and subject
+    COMMITRE+='.*$'      # Subject
 
     if grep -Eo "$COMMITRE" $FILENAME >& /dev/null; then
         return
     fi
 
     # check if it is related to an unsupported type
-    COMMITRE="^(${TYPELIST})"        # Commit type
-    COMMITRE+='(\([\w\-\s]+\))?!?'    # No scope restriction
-    COMMITRE+='\s?:\s'    # Delimiter between type/scope and subject
-    COMMITRE+='.*$'        # Subject
+    COMMITRE="^(${TYPELIST})"     # Commit type
+    COMMITRE+='(\([^)]+\))?!?'    # No scope restriction
+    COMMITRE+=' ?: ?'             # Delimiter between type/scope and subject
+    COMMITRE+='.*$'               # Subject
+
     if ! grep -Eo "$COMMITRE" $FILENAME >& /dev/null; then
         report_invalid_type
     fi
     
     # check if it is related to an unsupported scope
     if [ -n "$SCOPELIST" ]; then
-        COMMITRE="^(\w+)"        # Commit type
-        COMMITRE+='(\([\w\-\s]+\))?!?'    # No scope restriction        
-        COMMITRE+='\s?:\s'    # Delimiter between type/scope and subject
-        COMMITRE+='.*$'        # Subject
+        COMMITRE="^([^(]+)"        # Commit type
+        COMMITRE+='(\([^)]+\))?!?' # No scope restriction
+        COMMITRE+=' ?: ?'          # Delimiter between type/scope and subject
+        COMMITRE+='.*$'            # Subject
         if ! grep -Eo "$COMMITRE" $FILENAME >& /dev/null; then
             report_invalid_scope
         fi
@@ -121,7 +122,6 @@ check_first_line() {
 # Ensure that the second line is an empty line
 check_second_line() {
     local SECONDLINE=$(cat $FILENAME | grep -Ev '^#' | head -n 2 | tail -n 1)
-    echo "SECONDLINE=$SECONDLINE"
     cat $FILENAME
     if [ -n "$SECONDLINE" ]; then
         report_invalid_format
