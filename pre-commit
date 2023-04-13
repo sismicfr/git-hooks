@@ -78,7 +78,7 @@ check_branch_name() {
 	    return
 	    ;;
 	preprod|staging)
-	    specific branch for deployment purpose
+	    # specific branch for deployment purpose
 	    return
 	    ;;
     esac
