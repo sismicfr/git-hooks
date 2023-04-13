@@ -7,13 +7,13 @@
 # it wants to stop the commit.
 #
 # Author : Jacques Raphanel
-# Version: 1.1
+# Version: 1.2
 #
 
 # File containing the commit message
 BRANCHNAME=$(git rev-parse --abbrev-ref HEAD)
 # Predefined list of supported commit types 
-TYPELIST="chore|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
+TYPELIST="preprod|staging|chore|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
 # Project root directory
 ROOTDIR=$PWD
 
