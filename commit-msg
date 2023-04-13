@@ -8,7 +8,7 @@
 # commit.  The hook is allowed to edit the commit message file.
 #
 # Author : Jacques Raphanel
-# Version: 1.1
+# Version: 1.2
 #
 
 # File containing the commit message
@@ -82,6 +82,13 @@ report_invalid_format() {
 
 # Analyze the first line to ensure that conventional commit is properly used
 check_first_line() {
+    # Check if associated to a merge operation or not
+    local MERGERE="^Merge (remote-tracking )?branch '[^']+' into "
+    MERGERE+='.*$'
+    if grep -Eo "$MERGERE" $FILENAME >& /dev/null; then
+        return
+    fi
+
     # Build the regular expression to validate the commit message
     local COMMITRE="^(${TYPELIST})"   # Commit type
     if [ -z "$SCOPELIST" ]; then      # Commit scope
