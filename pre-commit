@@ -13,7 +13,7 @@
 # File containing the commit message
 BRANCHNAME=$(git rev-parse --abbrev-ref HEAD)
 # Predefined list of supported commit types 
-TYPELIST="preprod|staging|chore|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
+TYPELIST="chore|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
 # Project root directory
 ROOTDIR=$PWD
 
@@ -74,13 +74,13 @@ check_branch_name() {
     # Apply specific logic in case of specific branches:
     case "$BRANCHNAME" in
         main|master|develop)
-	    # main branch from github project
-	    return
-	    ;;
-	preprod|staging)
-	    # specific branch for deployment purpose
-	    return
-	    ;;
+	        # main branch from github project
+	        return
+	        ;;
+        preprod|staging)
+	        # specific branch for deployment purpose
+	        return
+	        ;;
     esac
 
     if [ `echo $BRANCHNAME | grep -c '/'` -eq 0 ]; then
