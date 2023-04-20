@@ -157,7 +157,7 @@ read -p "Enter a custom commit's scope: " scope
 
 # Enter short description/subject
 subject=""
-while [ -z "${subject}" ]; do
+while [ -z "${subject// /}" ]; do
     echo ""
     echo_info "? A description MUST immediately follow the type/scope prefix. The description is a short description of the changes."
     read -p "Enter a custom commit's description: " subject
