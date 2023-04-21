@@ -16,7 +16,7 @@ LOCAL_HOOKS_DIR=$(git rev-parse --show-toplevel 2> /dev/null)
 # Global template directory
 GLOBAL_TEMPLATE_DIR=$(git config --global --list | grep "init.templatedir" | cut -d= -f2)
 # List of supported hook scripts
-LIST_HOOK_SCRIPTS="pre-commit commit-msg doCommit.sh"
+LIST_HOOK_SCRIPTS="pre-commit commit-msg doCommit.sh doCreateBranch.sh"
 
 if [ -n "${LOCAL_HOOKS_DIR}" ]; then
     LOCAL_HOOKS_DIR="${LOCAL_HOOKS_DIR}/.git/hooks"
