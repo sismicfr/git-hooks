@@ -7,7 +7,7 @@
 # information to generate appropriate commit message
 #
 # Author : Jacques Raphanel
-# Version: 1.0
+# Version: 1.1
 #
 
 COLOR_RESET='\033[0m'
@@ -69,6 +69,11 @@ function run_menu() {
     local menu_items=(${function_arguments[@]:1})
     local menu_size="${#menu_items[@]}"
     local menu_limit=$((menu_size - 1))
+    local timeout=0.1
+
+    if [ "$(uname -s)" = "Darwin" ]; then
+        timeout=1
+    fi
 
     tput civis
     tput sc
@@ -79,10 +84,10 @@ function run_menu() {
         case "$input"
         in
             $'\x1B')  # ESC ASCII code (https://dirask.com/posts/ASCII-Table-pJ3Y0j)
-                read -rsn1 -t 0.1 input
+                read -rsn1 -t $timeout input
                 if [ "$input" = "[" ]; then
                     # occurs before arrow code
-                    read -rsn1 -t 0.1 input
+                    read -rsn1 -t $timeout input
                     case "$input" in
                         A)  # Up Arrow
                             if [ "$selected_item" -ge 1 ]; then
@@ -102,7 +107,7 @@ function run_menu() {
                             ;;
                     esac
                 fi
-                read -rsn5 -t 0.1  # flushing stdin
+                read -rsn5 -t $timeout  # flushing stdin
                 ;;
             "")  # Enter key
                 tput cnorm
