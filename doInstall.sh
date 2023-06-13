@@ -3,7 +3,7 @@
 # Install all required Git Hook Scripts
 #
 # Author : Jacques Raphanel
-# Version: 1.1
+# Version: 1.2
 
 progpath=$0
 progdir=${progpath%/*}
@@ -25,6 +25,7 @@ fi
 # set argument default values
 prefix=
 local=n
+globalonly=n
 verbose=n
 
 # apply SGR code to message
@@ -82,9 +83,10 @@ Defaults for the options are specified in square brackets.
 
 Configuration:
   -h, --help              display this help and exit
+  -g, --global            make global installation only [false]
   -l, --local             prefer local .git directory rather global
-                          template directory
-  -v, --verbose           be more verbose
+                          template directory [false]
+  -v, --verbose           be more verbose [false]
 
 Installation directories:
   --prefix=PREFIX         install files in PREFIX [$prefix]
@@ -153,6 +155,9 @@ for arg in "$@"; do
         --prefix)
             nextargisval=prefix
             ;;
+        -g|--global)
+            global=y
+            ;;
         -l|--local)
             if [ -n "${LOCAL_HOOKS_DIR}" ]; then
                 local=y
@@ -182,13 +187,17 @@ if [ -z "$GLOBAL_TEMPLATE_DIR" ]; then
     echo_verbose "no global template directory defined yet, so update global git configuration"
     GLOBAL_TEMPLATE_DIR=$HOME/.git-templates
     git config --global init.templatedir "$GLOBAL_TEMPLATE_DIR"
-    mkdir -p "$GLOBAL_TEMPLATE_DIR"
+    mkdir -p "$GLOBAL_TEMPLATE_DIR/hooks"
+fi
+
+if [ ! -d "$GLOBAL_TEMPLATE_DIR/hooks" ]; then
+    mkdir -p "$GLOBAL_TEMPLATE_DIR/hooks"
 fi
 
 if [ -z "$prefix" ]; then
     # Determine automatically the targeted template directory
-    if [ "$local" = "n" ]; then
-        prefix=$HOME/.git-templates
+    if [ "$local" = "n" -o "$global" = "y" ]; then
+        prefix=$HOME/.git-templates/hooks
     else
         prefix="$LOCAL_HOOKS_DIR"
     fi
@@ -199,7 +208,7 @@ fi
 for file in $LIST_HOOK_SCRIPTS; do
     echo_verbose "extracting version number from local $file script ..."
     localVersion=$(extract_local_version "$LOCAL_HOOKS_DIR/$file")
-    globalVersion=$(extract_local_version "$GLOBAL_TEMPLATE_DIR/$file")
+    globalVersion=$(extract_local_version "$GLOBAL_TEMPLATE_DIR/hooks/$file")
     remoteVersion=$(extract_remote_version "$file")
 
     if [ -z "$remoteVersion" ]; then
@@ -207,13 +216,13 @@ for file in $LIST_HOOK_SCRIPTS; do
         continue
     fi
 
-    if [ -n "${LOCAL_HOOKS_DIR}" ]; then
+    if [ -n "${LOCAL_HOOKS_DIR}" -a "$global" = "n" ]; then
         if [ -n "$localVersion" ]; then
             # Check local script
             if verlt $localVersion $remoteVersion; then
                 update_local_script "$LOCAL_HOOKS_DIR" "$file" "$localVersion" "$remoteVersion"
             else
-                echo_verbose "$GLOBAL_TEMPLATE_DIR/$file is already up-to-date"
+                echo_verbose "$GLOBAL_TEMPLATE_DIR/hooks/$file is already up-to-date ($localVersion)"
             fi
         else
             update_local_script "$LOCAL_HOOKS_DIR" "$file" "$localVersion" "$remoteVersion"
@@ -223,11 +232,11 @@ for file in $LIST_HOOK_SCRIPTS; do
     if [ -n "$globalVersion" ]; then
         # Check global script
         if verlt $globalVersion $remoteVersion; then
-            update_local_script "$GLOBAL_TEMPLATE_DIR" "$file" "$globalVersion" "$remoteVersion"
+            update_local_script "$GLOBAL_TEMPLATE_DIR/hooks" "$file" "$globalVersion" "$remoteVersion"
         else
-            echo_verbose "$GLOBAL_TEMPLATE_DIR/$file is already up-to-date"
+            echo_verbose "$GLOBAL_TEMPLATE_DIR/hooks/$file is already up-to-date ($globalVersion)"
         fi
     else
-        update_local_script "$GLOBAL_TEMPLATE_DIR" "$file" "$globalVersion" "$remoteVersion"
+        update_local_script "$GLOBAL_TEMPLATE_DIR/hooks" "$file" "$globalVersion" "$remoteVersion"
     fi
 done
