@@ -6,7 +6,7 @@
 # information to create a new branch.
 #
 # Author : Jacques Raphanel
-# Version: 1.1
+# Version: 1.2
 #
 
 COLOR_RESET='\033[0m'
@@ -129,8 +129,8 @@ check_git_repository() {
 source_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 check_git_repository
 
-echo ""
-echo ""
+# Clear the screen to focus on branch creation
+clear
 
 # Select the commit type
 selected_item=0
