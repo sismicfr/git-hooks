@@ -7,7 +7,7 @@
 # information to generate appropriate commit message
 #
 # Author : Jacques Raphanel
-# Version: 1.1
+# Version: 1.2
 #
 
 COLOR_RESET='\033[0m'
@@ -131,6 +131,9 @@ check_stagged_files() {
     done
     IFS=$IFSOLD
 }
+
+# Clear screen to focus on git commit operation
+clear
 
 # Ensure that at least one file is stagged
 check_stagged_files
