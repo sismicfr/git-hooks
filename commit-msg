@@ -14,7 +14,7 @@
 # File containing the commit message
 FILENAME=$1
 # Predefined list of supported commit types 
-TYPELIST="chore|fix|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
+TYPELIST="chore|ci|fix|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf"
 # Predefined list of supported scopes
 SCOPELIST=""
 # Project root directory
@@ -41,8 +41,8 @@ report_invalid_commit() {
     echo_err "bugfix: button click even handler firing twice"
     echo_err "hotfix: login page css"
     echo_err "feat(auth): added social login using twitter"
-    echo_err "refactor!: back to version X.Y.Z for component ZZZ"
-    echo_err "feat!: we support space before : for French people :-)"
+    echo_err "refactor: back to version X.Y.Z for component ZZZ"
+    echo_err "feat: we support space before : for French people :-)"
     exit 1
 }
 

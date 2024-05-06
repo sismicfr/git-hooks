@@ -6,7 +6,7 @@
 # information to create a new branch.
 #
 # Author : Jacques Raphanel
-# Version: 1.2
+# Version: 1.3
 #
 
 COLOR_RESET='\033[0m'
@@ -134,11 +134,13 @@ clear
 
 # Select the commit type
 selected_item=0
-menu_items=('feat:         A new feature' ) 
+menu_items=('feat/feature:  A new feature' ) 
 menu_items+=('bugfix:       A bug fix detected during development cycle' )
 menu_items+=('hotfix:       A bug fix detected as part of released version' )
 menu_items+=('experimental: Test or experiment a new feature or idea' )
 menu_items+=('build:        Changes to to the build process')
+menu_items+=('chore:        Changes that are not related to a fix or feature and do not modify the source or test files')
+menu_items+=('ci:           Changes that are related to ci/cd activity')
 
 echo_info "? Select the type of change that you're commiting: (Use arrow keys)"
 run_menu "$selected_item" "${menu_items[@]}"
