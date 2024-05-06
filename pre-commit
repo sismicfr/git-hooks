@@ -7,13 +7,13 @@
 # it wants to stop the commit.
 #
 # Author : Jacques Raphanel
-# Version: 1.4
+# Version: 1.5
 #
 
 # File containing the commit message
 BRANCHNAME=$(git rev-parse --abbrev-ref HEAD)
 # Predefined list of supported commit types 
-TYPELIST="chore|fix|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf|release"
+TYPELIST="chore|ci|fix|bugfix|hotfix|doc(s)?|experimental|build|feat(ure)?|refactor|revert|style|perf|release"
 # Project root directory
 ROOTDIR=$PWD
 
@@ -123,10 +123,23 @@ check_branch_name() {
     fi
 }
 
+# Execute php-cs-fixer with fix mode
+run_pre_commit() {
+    make pre-commit
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
+}
+
 # Validate the branch name
 main() {
     # Check if the branch message follow our conventions or not
     check_branch_name
+
+    if [ -r Makefile -a `grep -Ec '^pre-commit:' Makefile` -gt 0 ]; then
+        run_pre_commit
+    fi
+
 }
 
 # Check if commit types are locally customized
