@@ -96,7 +96,7 @@ Installation directories:
 # Check if one version is less or equal than another version
 # verlte VERSION1 VERSION2
 verlte() {
-    [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
+    [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ] && return 1 || return 0
 }
 
 # Check if one version is less than another version
