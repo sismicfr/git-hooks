@@ -25,7 +25,7 @@ fi
 # set argument default values
 prefix=
 local=n
-globalonly=n
+global=n
 verbose=n
 
 # apply SGR code to message
@@ -96,7 +96,7 @@ Installation directories:
 # Check if one version is less or equal than another version
 # verlte VERSION1 VERSION2
 verlte() {
-    [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ] && return 1 || return 0
+    [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ] && return 0 || return 1
 }
 
 # Check if one version is less than another version
@@ -216,13 +216,13 @@ for file in $LIST_HOOK_SCRIPTS; do
         continue
     fi
 
-    if [ -n "${LOCAL_HOOKS_DIR}" -a "$global" = "n" ]; then
+    if [ -n "${LOCAL_HOOKS_DIR}" ]; then
         if [ -n "$localVersion" ]; then
             # Check local script
             if verlt $localVersion $remoteVersion; then
                 update_local_script "$LOCAL_HOOKS_DIR" "$file" "$localVersion" "$remoteVersion"
             else
-                echo_verbose "$GLOBAL_TEMPLATE_DIR/hooks/$file is already up-to-date ($localVersion)"
+                echo_verbose "$LOCAL_HOOKS_DIR/hooks/$file is already up-to-date ($localVersion)"
             fi
         else
             update_local_script "$LOCAL_HOOKS_DIR" "$file" "$localVersion" "$remoteVersion"
