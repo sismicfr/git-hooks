@@ -7,7 +7,7 @@
 # it wants to stop the commit.
 #
 # Author : Jacques Raphanel
-# Version: 1.5
+# Version: 1.6
 #
 
 # File containing the commit message
@@ -128,6 +128,10 @@ run_pre_commit() {
     make pre-commit
     if [ $? -ne 0 ]; then
         exit $?
+    fi
+    files=$(git diff --cached --name-only --diff-filter=ACM)
+    if [ "$files" != "" ]; then 
+        git add $files
     fi
 }
 
