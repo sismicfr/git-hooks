@@ -7,7 +7,7 @@
 # it wants to stop the commit.
 #
 # Author : Jacques Raphanel
-# Version: 1.6
+# Version: 1.7
 #
 
 # File containing the commit message
@@ -73,6 +73,10 @@ check_branch_name() {
 
     # Apply specific logic in case of specific branches:
     case "$BRANCHNAME" in
+        HEAD)
+            # New project or rebase from specific Git Hash
+            return
+            ;;
         main|master|develop)
             # main branch from github project
             return
