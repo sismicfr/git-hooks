@@ -7,7 +7,7 @@
 # it wants to stop the commit.
 #
 # Author : Jacques Raphanel
-# Version: 1.7
+# Version: 1.9
 #
 
 # File containing the commit message
@@ -144,8 +144,10 @@ main() {
     # Check if the branch message follow our conventions or not
     check_branch_name
 
-    if [ -r Makefile -a `grep -Ec '^pre-commit:' Makefile` -gt 0 ]; then
-        run_pre_commit
+    if [ -r Makefile ]; then
+        if [ `grep -Ec '^pre-commit:' Makefile` -gt 0 ]; then
+            run_pre_commit
+        fi
     fi
 
 }
